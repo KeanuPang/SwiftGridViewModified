@@ -372,6 +372,20 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         
         return nil
     }
+
+    open func headerForItem(at indexPath: IndexPath) -> SwiftGridReusableView? {
+        let revertedPath: IndexPath = self.reverseIndexPathConversion(indexPath)
+
+        let headerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindHeader, at: revertedPath) as? SwiftGridReusableView
+        return headerView
+    }
+
+    open func groupingHeaderForItem(at indexPath: IndexPath) -> SwiftGridReusableView? {
+        let revertedPath: IndexPath = self.reverseIndexPathConversion(indexPath)
+
+        let headerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindGroupedHeader, at: revertedPath) as? SwiftGridReusableView
+        return headerView
+    }
     
     open func cellForItem(at indexPath: IndexPath) -> SwiftGridCell? {
         let revertedPath: IndexPath = self.reverseIndexPathConversion(indexPath)
@@ -462,6 +476,10 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
             let convertedPath = self.reverseIndexPathConversion(indexPath)
             self.collectionView.deselectItem(at: convertedPath, animated: animated)
         }
+    }
+
+    open func selectHeaderAtIndexPath(_ indexPath: IndexPath) {
+        self.selectReusableViewOfKind(SwiftGridElementKindHeader, atIndexPath: indexPath)
     }
     
     open func selectSectionHeaderAtIndexPath(_ indexPath:IndexPath) {
@@ -920,6 +938,18 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         
         return self.delegate!.dataGridView(self, widthOfColumnAtIndex :columnIndex)
     }
+
+    open func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+         self.delegate!.scrollViewDidEndDecelerating?(self)
+     }
+
+     open func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+         self.delegate?.scrollViewWillEndDragging?(self)
+     }
+
+     open func scrollViewDidScroll(_ scrollView: UIScrollView) {
+         self.delegate?.scrollViewDidScroll?(self)
+     }
 
 
     // MARK: UICollectionView DataSource

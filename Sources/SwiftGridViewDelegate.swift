@@ -192,4 +192,12 @@ import UIKit
      - Parameter indexPath: Current Swift Grid index path for the deselected cell.
      */
     @objc optional func dataGridView(_ dataGridView: SwiftGridView, didDeselectCellAtIndexPath indexPath: IndexPath)
+
+
+    // MARK: Scrolling events
+    @objc optional func scrollViewDidEndDecelerating(_ dataGridView : SwiftGridView)
+
+    @objc optional func scrollViewWillEndDragging(_ dataGridView : SwiftGridView)
+
+    @objc optional func scrollViewDidScroll(_ dataGridView : SwiftGridView)
 }
