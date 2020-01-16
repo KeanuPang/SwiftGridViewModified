@@ -98,6 +98,11 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
      If row selection is enabled, then entire rows will be selected rather than individual cells. This applies to section headers/footers in addition to rows.
      */
     open var rowSelectionEnabled: Bool = false
+
+    /**
+     When enabled, the entire row and all cells of column from the selected cell will be selected
+     */
+    open var crossSelectionEnabled: Bool = false
     
     open var isDirectionalLockEnabled: Bool {
         set(isDirectionalLockEnabled) {
@@ -1019,10 +1024,28 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
             self.collectionView.selectItem(at: itemPath, animated: animated, scrollPosition: UICollectionView.ScrollPosition())
         }
     }
+
+    fileprivate func selectRowByColumnAtIndexPath(_ indexPath: IndexPath, animated: Bool) {
+        let rows = self.numberOfRowsInSection(indexPath.sgSection)
+        for rowIndex in 0...rows - 1 {
+            let sgPath = IndexPath.init(forSGRow: rowIndex, atColumn: indexPath.sgColumn, inSection: indexPath.sgSection)
+            let itemPath = self.reverseIndexPathConversion(sgPath)
+            self.collectionView.selectItem(at: itemPath, animated: animated, scrollPosition: UICollectionView.ScrollPosition())
+        }
+    }
     
     fileprivate func deselectRowAtIndexPath(_ indexPath: IndexPath, animated: Bool) {
         for columnIndex in 0...self.sgColumnCount - 1 {
             let sgPath = IndexPath.init(forSGRow: indexPath.sgRow, atColumn: columnIndex, inSection: indexPath.sgSection)
+            let itemPath = self.reverseIndexPathConversion(sgPath)
+            self.collectionView.deselectItem(at: itemPath, animated: animated)
+        }
+    }
+
+    fileprivate func deselectRowByColumnAtIndexPath(_ indexPath: IndexPath, animated: Bool) {
+        let rows = self.numberOfRowsInSection(indexPath.sgSection)
+        for rowIndex in 0...rows - 1 {
+            let sgPath = IndexPath.init(forSGRow: rowIndex, atColumn: indexPath.sgColumn, inSection: indexPath.sgSection)
             let itemPath = self.reverseIndexPathConversion(sgPath)
             self.collectionView.deselectItem(at: itemPath, animated: animated)
         }
@@ -1070,6 +1093,10 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         
         if(self.rowSelectionEnabled) {
             self.selectRowAtIndexPath(convertedPath, animated: false)
+
+            if crossSelectionEnabled {
+                self.selectRowByColumnAtIndexPath(convertedPath, animated: false)
+            }
         }
         
         self.delegate?.dataGridView?(self, didSelectCellAtIndexPath: convertedPath)
@@ -1080,6 +1107,11 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         
         if(self.rowSelectionEnabled) {
             self.deselectRowAtIndexPath(convertedPath, animated: false)
+
+            if crossSelectionEnabled {
+                self.deselectRowByColumnAtIndexPath(convertedPath, animated: false)
+                self.deselectAllItemsIgnoring(indexPath, animated: false)
+            }
         }
         
         self.delegate?.dataGridView?(self, didDeselectCellAtIndexPath: convertedPath)
