@@ -1190,11 +1190,60 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         let convertedPath = self.convertCVIndexPathToSGIndexPath(indexPath)
         
         if(self.rowSelectionEnabled) {
-            self.deselectRowAtIndexPath(convertedPath, animated: false)
-
+            var sameRow = false
             if crossSelectionEnabled {
-                self.deselectRowByColumnAtIndexPath(convertedPath, animated: false)
-                self.deselectAllItemsIgnoring(indexPath, animated: false)
+                // deselect all cells in row at first
+                for itemPath in self.collectionView.indexPathsForSelectedItems ?? [] {
+                    if(self.convertCVIndexPathToSGIndexPath(itemPath).sgRow == convertedPath.sgRow) {
+                        sameRow = true
+                    }
+                    self.collectionView.deselectItem(at: itemPath, animated: false)
+                }
+            } else {
+                self.deselectRowAtIndexPath(convertedPath, animated: false)
+            }
+
+            // for cross selection only
+            if crossSelectionEnabled {
+                // find out the header path for this cell
+                let checkHeaderPath = IndexPath.init(forSGRow: 0, atColumn: convertedPath.sgColumn, inSection: indexPath.sgSection)
+                let sameColumn = self.selectedHeaders[checkHeaderPath] != nil
+
+                // same column and rows, deselect all cells
+                if sameColumn == true, sameRow == true {
+                    // deselect all cells
+                    self.deselectAllItemsIgnoring(convertedPath, animated: false)
+                    // call delegate
+                    self.delegate?.dataGridView?(self, didDeselectCellAtIndexPath: convertedPath)
+
+                    return
+                }
+
+                // same column but different row, keep all cells in column but select cells in new row
+                if sameColumn == true, sameRow == false {
+                    // select all cells in row
+                    self.selectRowAtIndexPath(convertedPath, animated: false)
+                    // select all cells in this column
+                    self.selectRowByColumnAtIndexPath(convertedPath, animated: false)
+                    // call delegate finally
+                    self.delegate?.dataGridView?(self, didSelectCellAtIndexPath: convertedPath)
+
+                    return
+                }
+
+                // same row but different column, keep all cells in row, but select cells in another column
+                if sameColumn == false, sameRow == true {
+                    // deselect all cells
+                    self.deselectAllItemsIgnoring(convertedPath, animated: false)
+                    // select all cells in row
+                    self.selectRowAtIndexPath(convertedPath, animated: false)
+                    // select all cells in this column
+                    self.selectRowByColumnAtIndexPath(checkHeaderPath, animated: false)
+                    // call delegate finally
+                    self.delegate?.dataGridView?(self, didSelectCellAtIndexPath: convertedPath)
+
+                    return
+                }
             }
         }
         
