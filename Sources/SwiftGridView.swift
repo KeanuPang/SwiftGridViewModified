@@ -338,6 +338,24 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
             self.collectionView.setContentOffset(contentOffset, animated: false)
         }
     }
+
+    open func reloadDataOnly() {
+        sgCollectionViewLayout.resetCachedParameters()
+
+        self.collectionView.reloadData()
+
+        // Adjust offset to not overflow content area based on viewsize
+        var contentOffset = self.collectionView.contentOffset
+        if self.sgCollectionViewLayout.collectionViewContentSize.height - contentOffset.y < self.collectionView.frame.size.height {
+            contentOffset.y = self.sgCollectionViewLayout.collectionViewContentSize.height - self.collectionView.frame.size.height
+
+            if contentOffset.y < 0 {
+                contentOffset.y = 0
+            }
+
+            self.collectionView.setContentOffset(contentOffset, animated: false)
+        }
+    }
     
     open func reloadCellsAtIndexPaths(_ indexPaths: [IndexPath], animated: Bool) {
         self.reloadCellsAtIndexPaths(indexPaths, animated: animated, completion: nil)
@@ -462,6 +480,19 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         let revertedPath: IndexPath = self.reverseIndexPathConversion(indexPath)
         
         return self.collectionView.dequeueReusableSupplementaryView(ofKind: elementKind, withReuseIdentifier: identifier, for: revertedPath) as! SwiftGridReusableView
+    }
+
+    open func selectCrossByColumnAtIndexPath(_ rowIndexPath: IndexPath, animated: Bool) {
+        guard self.rowSelectionEnabled == true, self.crossSelectionEnabled == true else { return }
+
+        // for row
+        self.selectRowAtIndexPath(rowIndexPath, animated: false)
+
+        // for column
+        self.selectedHeaders.allKeys.forEach{
+           let headerPath = $0 as! IndexPath
+           self.selectRowByColumnAtIndexPath(headerPath, animated: false)
+        }
     }
     
     open func selectCellAtIndexPath(_ indexPath:IndexPath, animated: Bool) {
@@ -1076,7 +1107,7 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         let footerPath = IndexPath.init(forSGRow: 0, atColumn: indexPath.sgColumn, inSection: indexPath.sgSection)
         if let footerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindFooter, at: self.reverseIndexPathConversion(footerPath)) as? SwiftGridReusableView {
             footerView.selected = false
-            self.selectFooterAtIndexPath(footerPath)
+            self.deselectFooterAtIndexPath(footerPath)
         }
 
         let rows = self.numberOfRowsInSection(indexPath.sgSection)
@@ -1101,7 +1132,7 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
             let revertedPath = self.reverseIndexPathConversion(footerPath)
             if let footerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindFooter, at: revertedPath) as? SwiftGridReusableView {
                 footerView.selected = false
-                self.deselectHeaderAtIndexPath(footerPath)
+                self.deselectFooterAtIndexPath(footerPath)
             }
         }
 
