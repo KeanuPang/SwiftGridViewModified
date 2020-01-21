@@ -1156,6 +1156,10 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         self.selectRowByColumnAtIndexPath(indexPath, animated: false)
     }
 
+    open func deselectSingleColumnSelection(_ indexPath: IndexPath) {
+        self.deselectRowByColumnAtIndexPath(indexPath, animated: false)
+    }
+
     open func deselectColumnsSelection() {
         self.selectedHeaders.allKeys.forEach{
             let headerPath = $0 as! IndexPath
