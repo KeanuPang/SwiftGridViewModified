@@ -489,6 +489,7 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         self.selectRowAtIndexPath(rowIndexPath, animated: false)
 
         // for column
+        guard !self.allowsMultipleSelection else { return }
         self.selectedHeaders.allKeys.forEach{
            let headerPath = $0 as! IndexPath
            self.selectRowByColumnAtIndexPath(headerPath, animated: false)
@@ -1205,8 +1206,10 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
     open func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let convertedPath = self.convertCVIndexPathToSGIndexPath(indexPath)
         
-        if(!self.allowsMultipleSelection) {
-            self.deselectAllItemsIgnoring(indexPath, animated: false)
+        if(self.allowsMultipleSelection) {
+            self.deselectColumnsSelection()
+        } else {
+             self.deselectAllItemsIgnoring(indexPath, animated: false)
         }
         
         if(self.rowSelectionEnabled) {
@@ -1214,9 +1217,6 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
 
             if crossSelectionEnabled {
                 if self.allowsMultipleSelection {
-                    if self.selectedHeaders.count <= 0 {
-                        self.selectRowByColumnAtIndexPath(convertedPath, animated: false)
-                    }
                 } else {
                     self.selectRowByColumnAtIndexPath(convertedPath, animated: false)
                 }
@@ -1228,120 +1228,116 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
     
     open func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
         let convertedPath = self.convertCVIndexPathToSGIndexPath(indexPath)
-        
-        if(self.rowSelectionEnabled) {
-            var sameRow = false
-            var selectRowsInSameColumn = Set<Int>()
-            var selectRowsNotSameColumn = Set<Int>()
-            if crossSelectionEnabled {
-                // deselect all cells in row at first
-                for itemPath in self.collectionView.indexPathsForSelectedItems ?? [] {
-                    let checkPath = self.convertCVIndexPathToSGIndexPath(itemPath)
 
-                    if(checkPath.sgRow == convertedPath.sgRow && checkPath.sgColumn != convertedPath.sgColumn) {
-                        sameRow = true
-                    }
-                    if(checkPath.sgRow != convertedPath.sgRow) {
-                        if(checkPath.sgColumn == convertedPath.sgColumn) {
-                            selectRowsNotSameColumn.insert(checkPath.sgRow)
-                        } else {
-                            selectRowsInSameColumn.insert(checkPath.sgRow)
-                        }
-                    }
+        guard self.rowSelectionEnabled else { return }
 
-                    if !allowsMultipleSelection {
-                        self.collectionView.deselectItem(at: itemPath, animated: false)
-                    }
+        var sameRow = false
+        var selectRowsInSameColumn = Set<Int>()
+        var selectRowsNotSameColumn = Set<Int>()
+
+        guard crossSelectionEnabled else {
+            self.deselectRowAtIndexPath(convertedPath, animated: false)
+            self.delegate?.dataGridView?(self, didDeselectCellAtIndexPath: convertedPath)
+            return
+        }
+
+        // deselect all cells in row at first
+        for itemPath in self.collectionView.indexPathsForSelectedItems ?? [] {
+            let checkPath = self.convertCVIndexPathToSGIndexPath(itemPath)
+
+            if(checkPath.sgRow == convertedPath.sgRow && checkPath.sgColumn != convertedPath.sgColumn) {
+                sameRow = true
+            }
+            if(checkPath.sgRow != convertedPath.sgRow) {
+                if(checkPath.sgColumn == convertedPath.sgColumn) {
+                    selectRowsNotSameColumn.insert(checkPath.sgRow)
+                } else {
+                    selectRowsInSameColumn.insert(checkPath.sgRow)
                 }
-            } else {
-                self.deselectRowAtIndexPath(convertedPath, animated: false)
+            }
+
+            if !allowsMultipleSelection {
+                self.collectionView.deselectItem(at: itemPath, animated: false)
+            }
+        }
+
+        // find out the header path for this cell
+        let checkHeaderPath = IndexPath.init(forSGRow: 0, atColumn: convertedPath.sgColumn, inSection: indexPath.sgSection)
+        let sameColumn = self.selectedHeaders[checkHeaderPath] != nil
+
+        // same column and rows, deselect all cells
+        if sameColumn == true, sameRow == true {
+            if allowsMultipleSelection {
+                if selectRowsInSameColumn.isEmpty {
+                    // deselect all cells
+                    self.deselectAllItemsIgnoring(indexPath, animated: false)
+                } else {
+                    // deselect all cells in this column
+                    self.deselectColumnsSelection()
+                    // deselect all cells in row
+                    self.deselectRowAtIndexPath(convertedPath, animated: false)
+                }
+
+                // call delegate
                 self.delegate?.dataGridView?(self, didDeselectCellAtIndexPath: convertedPath)
-                return
+            } else {
+                // deselect all cells
+                self.deselectAllItemsIgnoring(convertedPath, animated: false)
+
+                // call delegate
+                self.delegate?.dataGridView?(self, didDeselectCellAtIndexPath: convertedPath)
             }
 
-            // for cross selection only
-            if crossSelectionEnabled {
-                // find out the header path for this cell
-                let checkHeaderPath = IndexPath.init(forSGRow: 0, atColumn: convertedPath.sgColumn, inSection: indexPath.sgSection)
-                let sameColumn = self.selectedHeaders[checkHeaderPath] != nil
+            return
+        }
 
-                // same column and rows, deselect all cells
-                if sameColumn == true, sameRow == true {
-                    if allowsMultipleSelection {
-                        if selectRowsInSameColumn.count == 0 {
-                            // deselect all cells
-                            self.deselectAllItemsIgnoring(indexPath, animated: false)
+        // same column but different row, keep all cells in column but select cells in new row
+        if sameColumn == true, sameRow == false {
+            // select all cells in row
+            self.selectRowAtIndexPath(convertedPath, animated: false)
 
-                            // call delegate
-                            self.delegate?.dataGridView?(self, didDeselectCellAtIndexPath: convertedPath)
-                        } else {
-                            // deselect this row only
-                            self.deselectRowAtIndexPath(convertedPath, animated: false)
-                            // keeps cell in this column to be selected
-                            self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionView.ScrollPosition())
-
-                            self.delegate?.dataGridView?(self, didSelectCellAtIndexPath: convertedPath)
-                        }
-                    } else {
-                        // deselect all cells
-                        self.deselectAllItemsIgnoring(convertedPath, animated: false)
-
-                        // call delegate
-                        self.delegate?.dataGridView?(self, didDeselectCellAtIndexPath: convertedPath)
-                    }
-
-                    return
-                }
-
-                // same column but different row, keep all cells in column but select cells in new row
-                if sameColumn == true, sameRow == false {
-                    // select all cells in row
-                    self.selectRowAtIndexPath(convertedPath, animated: false)
-
-                    if !allowsMultipleSelection {
-                        // select all cells in this column
-                        self.selectRowByColumnAtIndexPath(convertedPath, animated: false)
-                    }
-
-                    // call delegate finally
-                    self.delegate?.dataGridView?(self, didSelectCellAtIndexPath: convertedPath)
-
-                    return
-                }
-
-                // same row but different column, keep all cells in row, but select cells in another column
-                if sameColumn == false, sameRow == true {
-                    if allowsMultipleSelection {
-                        if selectRowsNotSameColumn.count == 0 {
-                            // deselect all cells
-                            self.deselectAllItemsIgnoring(indexPath, animated: false)
-                        } else {
-                            self.deselectRowAtIndexPath(convertedPath, animated: false)
-
-                            // for column
-                            self.selectedHeaders.allKeys.forEach{
-                               let headerPath = $0 as! IndexPath
-                               self.selectRowByColumnAtIndexPath(headerPath, animated: false)
-                            }
-                        }
-
-                        // call delegate finally
-                        self.delegate?.dataGridView?(self, didDeselectCellAtIndexPath: convertedPath)
-                    } else {
-                        // deselect all cells
-                        self.deselectAllItemsIgnoring(convertedPath, animated: false)
-                        // select all cells in row
-                        self.selectRowAtIndexPath(convertedPath, animated: false)
-                        // select all cells in this column
-                        self.selectRowByColumnAtIndexPath(checkHeaderPath, animated: false)
-
-                        // call delegate finally
-                        self.delegate?.dataGridView?(self, didSelectCellAtIndexPath: convertedPath)
-                    }
-
-                    return
-                }
+            if allowsMultipleSelection {
+                // deselect all cells in this column
+                self.deselectColumnsSelection()
+            } else {
+                // select all cells in this column
+                self.selectRowByColumnAtIndexPath(convertedPath, animated: false)
             }
+
+            // call delegate finally
+            self.delegate?.dataGridView?(self, didSelectCellAtIndexPath: convertedPath)
+
+            return
+        }
+
+        // same row but different column, keep all cells in row, but select cells in another column
+        if sameColumn == false, sameRow == true {
+            if allowsMultipleSelection {
+                if selectRowsNotSameColumn.isEmpty {
+                    // deselect all cells
+                    self.deselectAllItemsIgnoring(indexPath, animated: false)
+                } else {
+                    // deselect all cells in this column
+                    self.deselectColumnsSelection()
+                    // deselect all cells in row
+                    self.deselectRowAtIndexPath(convertedPath, animated: false)
+                }
+
+                // call delegate finally
+                self.delegate?.dataGridView?(self, didDeselectCellAtIndexPath: convertedPath)
+            } else {
+                // deselect all cells
+                self.deselectAllItemsIgnoring(convertedPath, animated: false)
+                // select all cells in row
+                self.selectRowAtIndexPath(convertedPath, animated: false)
+                // select all cells in this column
+                self.selectRowByColumnAtIndexPath(checkHeaderPath, animated: false)
+
+                // call delegate finally
+                self.delegate?.dataGridView?(self, didSelectCellAtIndexPath: convertedPath)
+            }
+
+            return
         }
     }
     
