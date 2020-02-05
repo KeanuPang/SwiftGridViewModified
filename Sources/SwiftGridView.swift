@@ -1071,15 +1071,15 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
 
     fileprivate func selectRowByColumnAtIndexPath(_ indexPath: IndexPath, animated: Bool) {
         let headerPath = IndexPath.init(forSGRow: 0, atColumn: indexPath.sgColumn, inSection: indexPath.sgSection)
+        self.selectHeaderAtIndexPath(headerPath)
         if let headerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindHeader, at: self.reverseIndexPathConversion(headerPath)) as? SwiftGridReusableView {
             headerView.selected = true
-            self.selectHeaderAtIndexPath(headerPath)
         }
 
         let footerPath = IndexPath.init(forSGRow: 0, atColumn: indexPath.sgColumn, inSection: indexPath.sgSection)
+        self.selectFooterAtIndexPath(footerPath)
         if let footerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindFooter, at: self.reverseIndexPathConversion(footerPath)) as? SwiftGridReusableView {
             footerView.selected = true
-            self.selectFooterAtIndexPath(footerPath)
         }
 
         let rows = self.numberOfRowsInSection(indexPath.sgSection)
@@ -1100,15 +1100,15 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
 
     fileprivate func deselectRowByColumnAtIndexPath(_ indexPath: IndexPath, animated: Bool) {
         let headerPath = IndexPath.init(forSGRow: 0, atColumn: indexPath.sgColumn, inSection: indexPath.sgSection)
+        self.deselectHeaderAtIndexPath(headerPath)
         if let headerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindHeader, at: self.reverseIndexPathConversion(headerPath)) as? SwiftGridReusableView {
             headerView.selected = false
-            self.deselectHeaderAtIndexPath(headerPath)
         }
 
         let footerPath = IndexPath.init(forSGRow: 0, atColumn: indexPath.sgColumn, inSection: indexPath.sgSection)
+        self.deselectFooterAtIndexPath(footerPath)
         if let footerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindFooter, at: self.reverseIndexPathConversion(footerPath)) as? SwiftGridReusableView {
             footerView.selected = false
-            self.deselectFooterAtIndexPath(footerPath)
         }
 
         let rows = self.numberOfRowsInSection(indexPath.sgSection)
@@ -1122,18 +1122,18 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
     fileprivate func deselectAllItemsIgnoring(_ indexPath: IndexPath, animated: Bool) {
         self.selectedHeaders.allKeys.forEach{
             let headerPath = $0 as! IndexPath
+            self.deselectHeaderAtIndexPath(headerPath)
             let revertedPath = self.reverseIndexPathConversion(headerPath)
             if let headerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindHeader, at: revertedPath) as? SwiftGridReusableView {
                 headerView.selected = false
-                self.deselectHeaderAtIndexPath(headerPath)
             }
         }
         self.selectedFooters.allKeys.forEach{
             let footerPath = $0 as! IndexPath
+            self.deselectFooterAtIndexPath(footerPath)
             let revertedPath = self.reverseIndexPathConversion(footerPath)
             if let footerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindFooter, at: revertedPath) as? SwiftGridReusableView {
                 footerView.selected = false
-                self.deselectFooterAtIndexPath(footerPath)
             }
         }
 
@@ -1164,10 +1164,10 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
     open func deselectColumnsSelection() {
         self.selectedHeaders.allKeys.forEach{
             let headerPath = $0 as! IndexPath
+            self.deselectHeaderAtIndexPath(headerPath)
             let revertedPath = self.reverseIndexPathConversion(headerPath)
             if let headerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindHeader, at: revertedPath) as? SwiftGridReusableView {
                 headerView.selected = false
-                self.deselectHeaderAtIndexPath(headerPath)
             }
 
             let rows = self.numberOfRowsInSection(headerPath.sgSection)
@@ -1179,10 +1179,10 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         }
         self.selectedFooters.allKeys.forEach{
             let footerPath = $0 as! IndexPath
+            self.deselectFooterAtIndexPath(footerPath)
             let revertedPath = self.reverseIndexPathConversion(footerPath)
             if let footerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindFooter, at: revertedPath) as? SwiftGridReusableView {
                 footerView.selected = false
-                self.deselectFooterAtIndexPath(footerPath)
             }
         }
     }
