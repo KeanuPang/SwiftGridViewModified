@@ -1215,7 +1215,7 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         if(self.rowSelectionEnabled) {
             self.selectRowAtIndexPath(convertedPath, animated: false)
 
-            if crossSelectionEnabled {
+            if crossSelectionEnabled && convertedPath.sgColumn > 0 {
                 if self.allowsMultipleSelection {
                 } else {
                     self.selectRowByColumnAtIndexPath(convertedPath, animated: false)
