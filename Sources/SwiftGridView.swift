@@ -1083,10 +1083,12 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         }
 
         let rows = self.numberOfRowsInSection(indexPath.sgSection)
-        for rowIndex in 0...rows - 1 {
-            let sgPath = IndexPath.init(forSGRow: rowIndex, atColumn: indexPath.sgColumn, inSection: indexPath.sgSection)
-            let itemPath = self.reverseIndexPathConversion(sgPath)
-            self.collectionView.selectItem(at: itemPath, animated: animated, scrollPosition: UICollectionView.ScrollPosition())
+        if rows > 0 {
+            for rowIndex in 0...rows - 1 {
+                let sgPath = IndexPath.init(forSGRow: rowIndex, atColumn: indexPath.sgColumn, inSection: indexPath.sgSection)
+                let itemPath = self.reverseIndexPathConversion(sgPath)
+                self.collectionView.selectItem(at: itemPath, animated: animated, scrollPosition: UICollectionView.ScrollPosition())
+            }
         }
     }
     
@@ -1171,10 +1173,12 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
             }
 
             let rows = self.numberOfRowsInSection(headerPath.sgSection)
-            for rowIndex in 0...rows - 1 {
-                let sgPath = IndexPath.init(forSGRow: rowIndex, atColumn: headerPath.sgColumn, inSection: headerPath.sgSection)
-                let itemPath = self.reverseIndexPathConversion(sgPath)
-                self.collectionView.deselectItem(at: itemPath, animated: false)
+            if rows > 0 {
+                for rowIndex in 0...rows - 1 {
+                    let sgPath = IndexPath.init(forSGRow: rowIndex, atColumn: headerPath.sgColumn, inSection: headerPath.sgSection)
+                    let itemPath = self.reverseIndexPathConversion(sgPath)
+                    self.collectionView.deselectItem(at: itemPath, animated: false)
+                }
             }
         }
         self.selectedFooters.allKeys.forEach{
