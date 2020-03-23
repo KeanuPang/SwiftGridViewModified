@@ -989,15 +989,15 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
     }
 
     open func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-         self.delegate!.scrollViewDidEndDecelerating?(self)
+         self.delegate!.scrollViewDidEndDeceleratingDataGridView?(self)
      }
 
      open func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-         self.delegate?.scrollViewWillEndDragging?(self)
+         self.delegate?.scrollViewWillEndDraggingDataGridView?(self)
      }
 
      open func scrollViewDidScroll(_ scrollView: UIScrollView) {
-         self.delegate?.scrollViewDidScroll?(self)
+         self.delegate?.scrollViewDidScrollDataGridView?(self)
      }
 
 

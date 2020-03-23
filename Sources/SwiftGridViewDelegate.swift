@@ -195,9 +195,9 @@ import UIKit
 
 
     // MARK: Scrolling events
-    @objc optional func scrollViewDidEndDecelerating(_ dataGridView : SwiftGridView)
+    @objc optional func scrollViewDidEndDeceleratingDataGridView(_ dataGridView : SwiftGridView)
 
-    @objc optional func scrollViewWillEndDragging(_ dataGridView : SwiftGridView)
+    @objc optional func scrollViewWillEndDraggingDataGridView(_ dataGridView : SwiftGridView)
 
-    @objc optional func scrollViewDidScroll(_ dataGridView : SwiftGridView)
+    @objc optional func scrollViewDidScrollDataGridView(_ dataGridView : SwiftGridView)
 }
