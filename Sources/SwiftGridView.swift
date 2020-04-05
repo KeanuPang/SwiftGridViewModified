@@ -103,6 +103,11 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
      When enabled, the entire row and all cells of column from the selected cell will be selected
      */
     open var crossSelectionEnabled: Bool = false
+
+    /**
+     When enabled, then entire rows will not be selected by touch gesture from user
+     */
+    open var userTouchCellEnabled: Bool = true
     
     open var isDirectionalLockEnabled: Bool {
         set(isDirectionalLockEnabled) {
@@ -1205,6 +1210,14 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         if(self.rowSelectionEnabled) {
             self.toggleHighlightOnRowAtIndexPath(convertedPath, highlighted: false)
         }
+    }
+
+    open func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        return userTouchCellEnabled == true
+    }
+
+    open func collectionView(_ collectionView: UICollectionView, shouldDeselectItemAt indexPath: IndexPath) -> Bool {
+        return userTouchCellEnabled == true
     }
     
     open func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
