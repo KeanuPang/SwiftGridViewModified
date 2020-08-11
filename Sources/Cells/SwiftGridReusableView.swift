@@ -84,6 +84,7 @@ open class SwiftGridReusableView: UICollectionReusableView {
     open var selected:Bool = false {
         didSet {
             self.selectedBackgroundView?.isHidden = !selected
+            self.selectedStateChangedCallback()
         }
     }
     
@@ -228,4 +229,6 @@ open class SwiftGridReusableView: UICollectionReusableView {
         self.selected = false
         self.highlighted = false
     }
+
+    open func selectedStateChangedCallback() {}
 }
