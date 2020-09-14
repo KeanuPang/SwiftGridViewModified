@@ -1193,9 +1193,14 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         self.deselectRowByColumnAtIndexPath(indexPath, animated: false)
     }
 
-    open func deselectColumnsSelection() {
+    open func deselectColumnsSelection(ignoredSelectedColumn: Int? = nil) {
         self.selectedHeaders.allKeys.forEach{
             let headerPath = $0 as! IndexPath
+
+            if let ignored = ignoredSelectedColumn, ignored == headerPath.sgColumn {
+                return
+            }
+
             self.deselectHeaderAtIndexPath(headerPath)
             let revertedPath = self.reverseIndexPathConversion(headerPath)
             if let headerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindHeader, at: revertedPath) as? SwiftGridReusableView {
@@ -1215,6 +1220,11 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         }
         self.selectedFooters.allKeys.forEach{
             let footerPath = $0 as! IndexPath
+
+            if let ignored = ignoredSelectedColumn, ignored == footerPath.sgColumn {
+                return
+            }
+
             self.deselectFooterAtIndexPath(footerPath)
             let revertedPath = self.reverseIndexPathConversion(footerPath)
             if let footerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindFooter, at: revertedPath) as? SwiftGridReusableView {
@@ -1223,6 +1233,11 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         }
         self.selectedSectionFooters.allKeys.forEach{
             let footerPath = $0 as! IndexPath
+
+            if let ignored = ignoredSelectedColumn, ignored == footerPath.sgColumn {
+                return
+            }
+
             self.deselectSectionFooterAtIndexPath(footerPath)
             let revertedPath = self.reverseIndexPathConversion(footerPath)
             if let footerView = collectionView?.supplementaryView(forElementKind: SwiftGridElementKindSectionFooter, at: revertedPath) as? SwiftGridReusableView {
