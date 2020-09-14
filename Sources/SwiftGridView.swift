@@ -520,6 +520,12 @@ open class SwiftGridView : UIView, UICollectionViewDataSource, UICollectionViewD
         }
     }
 
+    open func deselectAllCells(animated: Bool) {
+        for itemPath in self.collectionView.indexPathsForSelectedItems ?? [] {
+            self.collectionView.deselectItem(at: itemPath, animated: animated)
+        }
+    }
+
     open func selectHeaderAtIndexPath(_ indexPath: IndexPath) {
         self.selectReusableViewOfKind(SwiftGridElementKindHeader, atIndexPath: indexPath)
     }
