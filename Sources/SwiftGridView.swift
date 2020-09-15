@@ -93,12 +93,12 @@ open class SwiftGridView: UIView, UICollectionViewDataSource, UICollectionViewDe
     /**
      If row selection is enabled, then entire rows will be selected rather than individual cells. This applies to section headers/footers in addition to rows.
      */
-    open var rowSelectionEnabled: Bool = false
+    open var rowSelectionEnabled: Bool = true
 
     /**
      When enabled, the entire row and all cells of column from the selected cell will be selected
      */
-    open var crossSelectionEnabled: Bool = false
+    private var crossSelectionEnabled: Bool = false
 
     /**
      When enabled, then entire rows will not be selected by touch gesture from user
@@ -462,34 +462,24 @@ open class SwiftGridView: UIView, UICollectionViewDataSource, UICollectionViewDe
         return self.collectionView.dequeueReusableSupplementaryView(ofKind: elementKind, withReuseIdentifier: identifier, for: revertedPath) as! SwiftGridReusableView
     }
 
-    open func selectCrossByColumnAtIndexPath(_ rowIndexPath: IndexPath, animated: Bool) {
-        guard self.rowSelectionEnabled == true, self.crossSelectionEnabled == true else { return }
-
-        // for row
-        self.selectRowAtIndexPath(rowIndexPath, animated: false)
-
-        // for column
-        guard !self.allowsMultipleSelection else { return }
-        self.selectedHeaders.allKeys.forEach {
-            let headerPath = $0 as! IndexPath
-            self.selectRowByColumnAtIndexPath(headerPath, animated: false)
-        }
-    }
-
     open func selectCellAtIndexPath(_ indexPath: IndexPath, animated: Bool) {
-        if self.rowSelectionEnabled {
+        guard let frozenCount = self.dataSource?.numberOfFrozenColumnsInDataGridView?(self) else { return }
+
+        let convertedPath = self.reverseIndexPathConversion(indexPath)
+        if convertedPath.sgColumn < frozenCount {
             self.selectRowAtIndexPath(indexPath, animated: animated)
         } else {
-            let convertedPath = self.reverseIndexPathConversion(indexPath)
             self.collectionView.selectItem(at: convertedPath, animated: animated, scrollPosition: UICollectionView.ScrollPosition())
         }
     }
 
     open func deselectCellAtIndexPath(_ indexPath: IndexPath, animated: Bool) {
-        if self.rowSelectionEnabled {
+        guard let frozenCount = self.dataSource?.numberOfFrozenColumnsInDataGridView?(self) else { return }
+
+        let convertedPath = self.reverseIndexPathConversion(indexPath)
+        if convertedPath.sgColumn < frozenCount {
             self.deselectRowAtIndexPath(indexPath, animated: animated)
         } else {
-            let convertedPath = self.reverseIndexPathConversion(indexPath)
             self.collectionView.deselectItem(at: convertedPath, animated: animated)
         }
     }
@@ -982,7 +972,7 @@ open class SwiftGridView: UIView, UICollectionViewDataSource, UICollectionViewDe
 
     // MARK: UICollectionView Delegate
 
-    fileprivate func selectRowAtIndexPath(_ indexPath: IndexPath, animated: Bool) {
+    open func selectRowAtIndexPath(_ indexPath: IndexPath, animated: Bool) {
         for columnIndex in 0...self.sgColumnCount - 1 {
             let sgPath = IndexPath(forSGRow: indexPath.sgRow, atColumn: columnIndex, inSection: indexPath.sgSection)
             let itemPath = self.reverseIndexPathConversion(sgPath)
@@ -1021,7 +1011,7 @@ open class SwiftGridView: UIView, UICollectionViewDataSource, UICollectionViewDe
         }
     }
 
-    fileprivate func deselectRowAtIndexPath(_ indexPath: IndexPath, animated: Bool) {
+    open func deselectRowAtIndexPath(_ indexPath: IndexPath, animated: Bool) {
         for columnIndex in 0...self.sgColumnCount - 1 {
             let sgPath = IndexPath(forSGRow: indexPath.sgRow, atColumn: columnIndex, inSection: indexPath.sgSection)
             let itemPath = self.reverseIndexPathConversion(sgPath)
@@ -1163,17 +1153,19 @@ open class SwiftGridView: UIView, UICollectionViewDataSource, UICollectionViewDe
     }
 
     open func collectionView(_ collectionView: UICollectionView, didHighlightItemAt indexPath: IndexPath) {
-        let convertedPath = self.convertCVIndexPathToSGIndexPath(indexPath)
+        guard let frozenCount = self.dataSource?.numberOfFrozenColumnsInDataGridView?(self) else { return }
 
-        if self.rowSelectionEnabled {
+        let convertedPath = self.convertCVIndexPathToSGIndexPath(indexPath)
+        if convertedPath.sgColumn < frozenCount {
             self.toggleHighlightOnRowAtIndexPath(convertedPath, highlighted: true)
         }
     }
 
     open func collectionView(_ collectionView: UICollectionView, didUnhighlightItemAt indexPath: IndexPath) {
-        let convertedPath = self.convertCVIndexPathToSGIndexPath(indexPath)
+        guard let frozenCount = self.dataSource?.numberOfFrozenColumnsInDataGridView?(self) else { return }
 
-        if self.rowSelectionEnabled {
+        let convertedPath = self.convertCVIndexPathToSGIndexPath(indexPath)
+        if convertedPath.sgColumn < frozenCount {
             self.toggleHighlightOnRowAtIndexPath(convertedPath, highlighted: false)
         }
     }
@@ -1195,7 +1187,9 @@ open class SwiftGridView: UIView, UICollectionViewDataSource, UICollectionViewDe
             self.deselectAllItemsIgnoring(indexPath, animated: false)
         }
 
-        if self.rowSelectionEnabled {
+        guard let frozenCount = self.dataSource?.numberOfFrozenColumnsInDataGridView?(self) else { return }
+
+        if convertedPath.sgColumn < frozenCount {
             self.selectRowAtIndexPath(convertedPath, animated: false)
 
             if crossSelectionEnabled, convertedPath.sgColumn > 0 {
@@ -1219,7 +1213,11 @@ open class SwiftGridView: UIView, UICollectionViewDataSource, UICollectionViewDe
         var selectRowsNotSameColumn = Set<Int>()
 
         guard crossSelectionEnabled else {
-            self.deselectRowAtIndexPath(convertedPath, animated: false)
+            guard let frozenCount = self.dataSource?.numberOfFrozenColumnsInDataGridView?(self) else { return }
+
+            if convertedPath.sgColumn < frozenCount {
+                self.deselectRowAtIndexPath(convertedPath, animated: false)
+            }
             self.delegate?.dataGridView?(self, didDeselectCellAtIndexPath: convertedPath)
             return
         }
